@@ -1,5 +1,4 @@
 var express = require('express'),
-    findit = require('findit'),
     markdown = require('node-markdown').Markdown,
     fs = require('fs'),
     path = require('path'),
