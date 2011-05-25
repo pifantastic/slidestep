@@ -5,36 +5,59 @@ var express = require('express'),
     path = require('path'),
     jade = require('jade'),
     io = require('socket.io')
-    password = 'lollercopter';
+    password = 'lollercopter',
+    app = express.createServer();
 
-var app = express.createServer();
+function ucwords(str) {
+  return (str + '').replace('-', ' ').replace(/^([a-z])|\s+([a-z])/g, function ($1) {
+    return $1.toUpperCase();
+  });
+}
 
 app.configure( function(){
   app.set( 'views', __dirname + '/views' )
   app.set( 'view engine', 'jade' )
   app.use( express.bodyParser() )
   app.use( express.methodOverride() )
-  app.use( app.router )
   app.use( express.static( __dirname + '/presentations' ) )
-})
+  app.use( app.router )
+});
 
-app.get(/^\/([^public]+)/, function(req, res) {
+var presos = fs.readdirSync( __dirname + '/presentations' ).filter(function(dir) {
+  return dir !== 'public';
+});
+
+app.get('/', function(req, res) {
+  res.render( 'index', { title: 'slidestep!', presos: presos, ucwords: ucwords });  
+});
+
+app.get(/^\/([\w-]+)/, function(req, res) {
   // Make sure the requested presentation exists.
   var presentation = './presentations/' + req.params[0];
   if (path.existsSync(presentation)) {
     // Parse the slides.
-    var slides = [];
-    fs.readdirSync(presentation).forEach(function(file, i) {
-      if (file.match(/\.md$/)) {
-        slides.push({
-          content: markdown(fs.readFileSync(presentation + '/' + file, 'utf8'))
-        }); 
-      }
-    });
+    var slides = '';
+
+    // Jade.
+    if (path.existsSync(presentation + '/preso.jade')) {
+      slides = jade.render(fs.readFileSync(presentation + '/preso.jade', 'utf8')); 
+
+    // Markdown.
+    } else if (path.existsSync(presentation + '/preso.md')) {
+      var html = markdown(fs.readFileSync(presentation + '/preso.md', 'utf8'));
+      html.split('<h1>').filter(Boolean).forEach(function(str, i) {
+        slides += '<div class="slide"><h1>' + str + '</div>';
+      });
+      
+    // Html.
+    } else if (path.existsSync(presentation + '/preso.html')) {
+      slides = fs.readFileSync(presentation + '/preso.md', 'utf8'); 
+    }
+    
     // Render the presentation.
     res.render( 'preso', { title: 'slidestep!', name: req.params[0], slides: slides });
   } else {
-    res.render( 'index', { title: 'slidestep!' });
+    res.render( 'index', { title: 'slidestep!', presos: presos, ucwords: ucwords });
   }
 });
 
