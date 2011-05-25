@@ -1,0 +1,14 @@
+div#header
+  div.container
+    h1= name
+
+div#content
+  div#slides
+    != partial( 'slide.jade', { collection: slides, as: 'slide' } )
+
+input( type='password', placeholder='Take control!' )#password
+
+a( href='#', style='display: none' )#relinquish Relinquish control!
+
+label#follow Follow? 
+  input( type='checkbox' )
