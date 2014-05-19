@@ -32,7 +32,7 @@ app.get('/', function(req, res) {
 
 app.get(/^\/([\w-]+)/, function(req, res) {
   // Make sure the requested presentation exists.
-  var presentation = './presentations/' + req.params[0];
+  var presentation = __dirname + '/presentations/' + req.params[0];
   if (path.existsSync(presentation)) {
     // Parse the slides.
     var slides = '';
